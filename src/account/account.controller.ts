@@ -14,8 +14,6 @@ export class AccountController {
   @ApiOperation({ summary: '회원 생성 API', description: '회원을 생성한다' })
   @ApiCreatedResponse({ description: '회원을 생성한다', type: AccountDetailDto })
   async create(@Body() body: CreateAccountDto) {
-    console.log('body', body);
-
     return this.accountService.create(body);
   }
 
