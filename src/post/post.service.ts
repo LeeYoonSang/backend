@@ -24,8 +24,8 @@ export class PostService {
    */
   async getPostDetail(data: { id: Array<string>; create_date?: string; delete_date?: string }) {
     const id_list = data.id.map((value) => +value);
-    const start_date = data.create_date ? data.create_date : '0001-01-01 00:00:00';
-    const end_date = data.delete_date ? data.delete_date : '2999-12-31 23:59:59';
+    const start_date = data.create_date ? data.create_date : '1970-01-01 00:00:01';
+    const end_date = data.delete_date ? data.delete_date : '2038-01-19 03:14:07';
     const post = await this.postRepository.find({
       where: {
         id: In(id_list),
@@ -91,26 +91,30 @@ export class PostService {
   async deletePost(id: Array<string>, account_id: string) {
     const account_data = await this.accountService.findOneAccount({ id: account_id });
     const { type, school_name, area } = account_data;
-    const delete_id_list = id.map((value) => +value);
+    const delete_id_list = id?.map((value) => +value);
 
     if (type !== 'admin') {
       throw new BadRequestException('학생인 경우 게시글을 삭제할 수 없습니다.');
     }
 
-    const delete_post = await this.postRepository.delete({
-      id: In(delete_id_list),
-    });
+    if (!!delete_id_list) {
+      const delete_post = await this.postRepository.delete({
+        id: In(delete_id_list),
+      });
+      const board_data = await this.boardService.findOneBoard({ school_name });
 
-    const board_data = await this.boardService.findOneBoard({ school_name });
+      await this.boardService.update({
+        school_name,
+        post_list: board_data.post_list?.filter((post) => !id.includes(post)),
+        id: board_data.id,
+        area,
+      });
 
-    await this.boardService.update({
-      school_name,
-      post_list: board_data.post_list?.filter((post) => !id.includes(post)),
-      id: board_data.id,
-      area,
-    });
-
-    return delete_post;
+      return delete_post;
+    }
+    return {
+      status: 200,
+    };
   }
 
   /**

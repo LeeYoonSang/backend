@@ -85,9 +85,14 @@ export class AccountService {
     const account_data = await this.findOneAccount({ id });
     const subscribe_list = account_data.subscribe_list?.filter((data) => !data.delete_date);
 
-    const result = await Promise.all(subscribe_list.map(async (data) => await this.boardService.findOneBoard({ id: data.id })));
+    if (!!subscribe_list) {
+      const result = await Promise.all(subscribe_list.map(async (data) => await this.boardService.findOneBoard({ id: data.id })));
 
-    return result;
+      return result;
+    }
+    return {
+      message: '구독중인 게시판이 없습니다.',
+    };
   }
 
   /**
@@ -119,10 +124,10 @@ export class AccountService {
     const subscribe_list = account_data.subscribe_list.filter((list) => list.id === board_id);
 
     // 아예 구독한적이 없는 경우
-    if (!subscribe_list) {
+    if (subscribe_list.length === 0) {
       throw new BadRequestException('해당 페이지를 구독하고 있지 않습니다.');
     }
-    const result = await await this.sortList(subscribe_list);
+    const result = await this.sortList(subscribe_list);
 
     return result;
   }
@@ -137,5 +142,9 @@ export class AccountService {
       });
     }
     return [];
+  }
+
+  async findAllAccount() {
+    return await this.accountRepository.find();
   }
 }

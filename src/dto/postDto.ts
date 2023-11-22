@@ -15,13 +15,13 @@ export class CreatePostDto {
     description: '작성자 ID (계정 발급 시 사용한 UUID)',
   })
   account_id?: string;
+}
+
+export class PostDetailDto extends CreatePostDto {
   @ApiProperty({
     description: '게시글 ID',
   })
   id: number;
-}
-
-export class PostDetailDto extends CreatePostDto {
   @ApiProperty({
     description: '게시글 등록일',
   })

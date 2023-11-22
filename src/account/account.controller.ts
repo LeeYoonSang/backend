@@ -63,7 +63,6 @@ export class AccountController {
   @ApiQuery({ description: '게시판 ID', name: 'board-id', required: true })
   @ApiOkResponse({ description: '해당 학교 페이지에 있는 게시글(구독 기간 내에 등록된 글만 조회됨)', type: PostDetailDto, isArray: true })
   async findOneList(@Param('id') id: string, @Query('board-id') board_id: string) {
-    console.log('findOneList');
     return this.accountService.findOneList(id, board_id);
   }
 }

@@ -76,6 +76,22 @@ export class BoardService {
     const post_list = existedBoard.post_list;
     await this.postService.deletePost(post_list, account_id);
 
+    // 해당 페이지를 구독중인경우 구독리스트에서 제거해줘야함
+    const all_account_data = await this.accountService.findAllAccount();
+    const delete_subscribe_list = all_account_data
+      .filter((account) => account.subscribe_list?.find((list) => list.id === id))
+      .map((account) => {
+        const { subscribe_list } = account;
+        for (let i = 0; i < subscribe_list.length; i++) {
+          if (subscribe_list[i].id === id) {
+            subscribe_list.splice(i, 1);
+            i--;
+          }
+        }
+        return account;
+      });
+    Promise.all(delete_subscribe_list.map(async (account) => await this.accountService.update(account)));
+
     // 게시글 삭제 후 게시판도 삭제
     await this.boardRepository.delete({
       id: +id,
@@ -162,7 +178,7 @@ export class BoardService {
 
           // 구독중인데 구독 해제일이 없는 경우 해제일 등록
           if (list.id === id) {
-            const delete_date = moment.tz('Asia/Seoul').utc().format('YYYY-MM-DD HH:mm:ss');
+            const delete_date = moment.utc().format('YYYY-MM-DD HH:mm:ss');
             list.delete_date = delete_date;
             return list;
           }
@@ -172,7 +188,7 @@ export class BoardService {
         await this.accountService.update({ ...account_data, subscribe_list: new_subscribe_list });
       } else {
         // 해당페이지를 구독중이지 않은 경우 새로 구독
-        const create_date = moment.tz('Asia/Seoul').utc().format('YYYY-MM-DD HH:mm:ss');
+        const create_date = moment.utc().format('YYYY-MM-DD HH:mm:ss');
         const subscribe_data = {
           id,
           create_date,
@@ -182,7 +198,7 @@ export class BoardService {
       }
     } else {
       // 구독중인 페이지가 없는 경우 새로 구독
-      const create_date = moment.tz('Asia/Seoul').utc().format('YYYY-MM-DD HH:mm:ss');
+      const create_date = moment.utc().format('YYYY-MM-DD HH:mm:ss');
       const subscribe_data = {
         id,
         create_date,
